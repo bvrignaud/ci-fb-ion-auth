@@ -260,14 +260,14 @@ class Facebook
 	    $userId = $this->ci->session->user_id;
 	    $this->ci->db->select('idfacebook_user');
 	    $query = $this->ci->db->get_where('facebook_user', ['users_id' => $userId]);
-	    $test = $this->ci->db->last_query();
-	    $user->idfacebook_user = $query->row()->idfacebook_user;
+	    log_message('debug', 'Facebook::disconnectFacebookAccount() : ' . $this->ci->db->last_query());
+	    $idFbUser = $query->row()->idfacebook_user;
 	    
 	    $accessToken = $this->app_id . '|' . $this->appSecret;
-	    $request = new Facebook\FacebookRequest($this->fb->getApp(), $accessToken, 'DELETE', $user->idfacebook_user . "/permissions");
+	    $request = new Facebook\FacebookRequest($this->fb->getApp(), $accessToken, 'DELETE', "$idFbUser/permissions");
 	    $response = $this->fb->getClient()->sendRequest($request);
 	    
-	    $this->ci->db->where('users_id', $userId);
+	    $this->ci->db->where('idfacebook_user', $idFbUser);
 	    $this->ci->db->delete('facebook_user');
 	    
 	    $this->ci->session->unset_userdata('fb_access_token');
