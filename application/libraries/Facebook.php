@@ -51,6 +51,9 @@ class Facebook
 		
 		// Set Ion auth hooks
 		$this->ci->ion_auth->set_hook('logout', 'facebook_logout', 'Facebook', 'logout', []);
+		$this->ci->ion_auth->set_hook('user', 'facebook_user', 'Facebook', 'user', []);
+		
+		$this->ci->load->model('facebook_model');
 	}
 	
 	
@@ -297,6 +300,16 @@ class Facebook
 	{
 	    $ci =& get_instance();
 	    $ci->session->unset_userdata('fb_access_token');
+	}
+	
+	/**
+	 * Add database facebook datas to Ion-Auth
+	 */
+	public static function user()
+	{
+	    $ci =& get_instance();
+	    $ci->ion_auth_model->db->select('facebook_user.idfacebook_user');
+	    $ci->ion_auth_model->db->join('facebook_user', 'facebook_user.users_id = users.id', 'left');
 	}
 	
 }

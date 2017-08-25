@@ -1,17 +1,27 @@
-*/config/development
-*/logs/log-*.php
-!*/logs/index.html
-*/cache/*
-!*/cache/index.html
-!*/cache/.htaccess
+index.php
 
-user_guide_src/build/*
-user_guide_src/cilexer/build/*
-user_guide_src/cilexer/dist/*
-user_guide_src/cilexer/pycilexer.egg-info/*
+/application/.htaccess
+/application/index.html
+/application/cache/*
+/application/config/*
+!/application/config/facebook.php
+/application/controllers/*
+!/application/controllers/Welcome_fb_ion_auth.php
+/application/core/*
+/application/helpers/*
+!application/helpers/facebook_helpers.php
+/application/hooks/*
+/application/language/*
+/application/libraries/*
+!application/libraries/Facebook.php
+/application/logs/*
+/application/models/*
+!application/models/Facebook_model.php
+/application/third_party/*
+/application/views/*
+!/application/views/fb_*
 
-#codeigniter 3
-application/logs/*
-!application/logs/index.html
-!application/logs/.htaccess
-/vendor/
+/system/
+vendor/
+
+composer.lock
