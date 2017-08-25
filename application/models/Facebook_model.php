@@ -85,23 +85,6 @@ class Facebook_model extends Ion_auth_model
 	
 	
 	/**
-	 * 
-	 * {@inheritDoc}
-	 * @see Ion_auth_model::user()
-	 */
-	public function user($id = NULL)
-	{
-	    $this->db->select('facebook_user.idfacebook_user');
-	    $this->db->join('facebook_user', 'facebook_user.users_id = users.id', 'left');
-	    parent::user($id);
-	    
-	    log_message('debug', $this->db->last_query());
-	
-	    return $this;
-	}
-	
-	
-	/**
 	 * register
 	 *
 	 * @param $identity
