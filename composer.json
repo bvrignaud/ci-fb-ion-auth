@@ -1,0 +1,12 @@
+{
+    "description": "CodeIgniter library for Facebook with Ion-Auth",
+    "name": "bvrignaud/ci-fb-ion-auth",
+    "license": "MIT",
+    "support": {
+    		"source": "https://github.com/bvrignaud/ci-fb-ion-auth"
+    },
+    "require": {
+        "php": ">=5.4.8",
+        "facebook/graph-sdk": "^5.6"
+    }
+}
