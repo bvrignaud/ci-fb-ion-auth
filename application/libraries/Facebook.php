@@ -11,32 +11,33 @@ class Facebook
 {
     /** @var CI_Controller */
     private $ci;
-    
+
     /** @var Facebook\Facebook */
     private $fb;
-    
+
     /** @var string */
     public $app_id;
-    
+
     /** @var string */
     private $appSecret;
-    
+
     /** @var string */
     private $graph_version;
-    
+
     /** @var string */
     private $accessToken;
-    
+
     /** @var Facebook\Helpers\FacebookRedirectLoginHelper */
     private $fbRedirectLoginHelper;
-    
+
     /** @var Array */
     private $scope;
-    
-	
+
+
 	public function __construct()
 	{
 		$this->ci =& get_instance();
+    $this->ci->load->library('session');
 		$this->ci->load->config('facebook', TRUE);
 		$this->app_id = $this->ci->config->item('app_id', 'facebook');
 		$this->appSecret = $this->ci->config->item('app_secret', 'facebook');
@@ -48,15 +49,15 @@ class Facebook
 			'default_graph_version' => $this->graph_version,
 		]);
 		$this->fbRedirectLoginHelper = $this->fb->getRedirectLoginHelper();
-		
+
 		// Set Ion auth hooks
 		$this->ci->ion_auth->set_hook('logout', 'facebook_logout', 'Facebook', 'logout', []);
 		$this->ci->ion_auth->set_hook('user', 'facebook_user', 'Facebook', 'user', []);
-		
+
 		$this->ci->load->model('facebook_model');
 	}
-	
-	
+
+
 	/**
 	 * Generates the facebook connection link
 	 * @param string $redirectUrl redirection url (eg: 'auth/fb_callback')
@@ -67,20 +68,20 @@ class Facebook
 	    $redirectUrl = $redirectUrl ? site_url($redirectUrl) : site_url($this->ci->config->item('login_redirect_url', 'facebook'));
 	    return $this->fbRedirectLoginHelper->getLoginUrl($redirectUrl, $this->scope);
 	}
-	
-	
+
+
 	public function fb_callback()
 	{
 	    log_message('debug', 'Facebook::fb_callback()');
-	
+
 	    $accessToken = $this->getAccessToken(true);
-	    
+
 	    // The OAuth 2.0 client handler helps us manage access tokens
 	    $oAuth2Client = $this->fb->getOAuth2Client();
-	
+
 	    // Get the access token metadata from /debug_token
 	    $tokenMetadata = $oAuth2Client->debugToken($accessToken);
-	
+
 	    // Validation (these will throw FacebookSDKException's when they fail)
 	    try {
 	       $tokenMetadata->validateAppId($this->app_id);
@@ -89,11 +90,11 @@ class Facebook
            log_message('error', 'Facebook SDK returned an error: ' . $e->getMessage());
            show_error('Facebook SDK returned an error: ' . $e->getMessage());
         }
-	    
+
 	    // If you know the user ID this access token belongs to, you can validate it here
 	    //$tokenMetadata->validateUserId('123');
 	    $tokenMetadata->validateExpiration();
-	
+
 	    if (!$accessToken->isLongLived()) {
 	        // Exchanges a short-lived access token for a long-lived one
 	        try {
@@ -103,13 +104,13 @@ class Facebook
 	            show_error('Error getting long-lived access token: ' . $this->fbRedirectLoginHelper->getMessage());
 	        }
 	    }
-	
+
 	    $this->ci->session->set_userdata('fb_access_token', $accessToken->getValue());
-	
+
 	    // User is logged in with a long-lived access token.
 	    // You can redirect them to a members-only page.
 	    //header('Location: https://example.com/members.php');
-	
+
 	    try {
 	        // Returns a `Facebook\FacebookResponse` object
 	        $response = $this->fb->get('/me?fields=id,name,email', $accessToken);
@@ -120,9 +121,9 @@ class Facebook
 	        log_message('error', 'Facebook SDK returned an error: ' . $e->getMessage());
 	        show_error('Facebook SDK returned an error: ' . $e->getMessage());
 	    }
-	
+
 	    $user = $response->getGraphUser();
-	
+
 	    // get all user graph data
 	    $email            = $user->getEmail();
  	    $facebook_user_id = $user->getId();
@@ -135,9 +136,9 @@ class Facebook
 // 	    $birthday         = $user->getBirthday();
 // 	    $location         = $user->getLocation();
 // 	    $hometown         = $user->getHometown();
-	
+
 	    $rememberMe = $this->ci->config->item('remember_me', 'facebook');
-	
+
  	    // Check if facebook user id is register
 	    if ($this->identity_check($facebook_user_id)) {
 	        return $this->ci->facebook_model->facebook_login($facebook_user_id, $rememberMe);
@@ -152,22 +153,22 @@ class Facebook
 	        }
 	        return $this->ci->facebook_model->facebook_login($facebook_user_id, $rememberMe);
 	    }
-	    
+
 	}
-	
-	
+
+
 	/**
 	 * @param \Facebook\GraphNodes\GraphUser $user
 	 */
 	private function addNewUser(\Facebook\GraphNodes\GraphUser $user)
 	{
 	    $this->ci->load->helper('string');
-	    
+
 	    $uploadPath = $this->ci->config->item('upload_path', 'facebook');
 	    $img = file_get_contents('https://graph.facebook.com/'.$user->getId().'/picture?type=large');
 	    $file = $uploadPath . $user->getId() . '.jpg';
 	    file_put_contents($file, $img);
-	    
+
 	    $email = $user->getEmail();
 	    $additional_data = [
 	        'facebook_uid'  => $user->getId(),
@@ -177,11 +178,11 @@ class Facebook
 	        //'facebook_link' => $user->getLink(),
 	        'avatar'        => $user->getId() . '.jpg',
 	    ];
-	    
+
 	    return $this->ci->facebook_model->register($user->getName(), random_string(), $email, $additional_data);
 	}
 
-	
+
 	/**
 	 * Get stored access token
 	 *
@@ -206,7 +207,7 @@ class Facebook
 	                log_message('error', $message);
 	                show_error($message);
 	            }
-	            
+
 	            if (!isset($this->accessToken)) {
 	                if ($this->fbRedirectLoginHelper->getError()) {
 	                    $message = [
@@ -223,14 +224,14 @@ class Facebook
 	            $this->ci->session->set_userdata('fb_access_token', $this->accessToken->getValue());
 	        }
 	    }
-	    
+
 	    return $this->accessToken;
 	}
-	
-	
+
+
 	/**
 	 * Connect a facebook account with the application user account
-	 * @param int $userId 
+	 * @param int $userId
 	 */
 	public function connectFacebookAccount($userId = null)
 	{
@@ -242,16 +243,16 @@ class Facebook
 	    } catch(Facebook\Exceptions\FacebookSDKException $e) {
 	        show_error('Facebook SDK returned an error: ' . $e->getMessage());
 	    }
-	
+
 	    $user = $response->getGraphUser();
- 	    
+
 	    $this->ci->db->insert('facebook_user', [
 	        'idfacebook_user' => $user->getId(),
 	        'users_id' => $userId ? $userId : $this->ci->facebook_model->user()->row()->id,
 	    ]);
 	}
-	
-	
+
+
 	/**
 	 * Disconnect a facebook account with the application account
 	 */
@@ -262,18 +263,18 @@ class Facebook
 	    $query = $this->ci->db->get_where('facebook_user', ['users_id' => $userId]);
 	    log_message('debug', 'Facebook::disconnectFacebookAccount() : ' . $this->ci->db->last_query());
 	    $idFbUser = $query->row()->idfacebook_user;
-	    
+
 	    $accessToken = $this->app_id . '|' . $this->appSecret;
 	    $request = new Facebook\FacebookRequest($this->fb->getApp(), $accessToken, 'DELETE', "$idFbUser/permissions");
 	    $response = $this->fb->getClient()->sendRequest($request);
-	    
+
 	    $this->ci->db->where('idfacebook_user', $idFbUser);
 	    $this->ci->db->delete('facebook_user');
-	    
+
 	    $this->ci->session->unset_userdata('fb_access_token');
 	}
-	
-	
+
+
 	/**
 	 * Identity check
 	 * @param string $identity
@@ -284,15 +285,15 @@ class Facebook
 	    if (empty($identity)) {
 	        return FALSE;
 	    }
-	    
+
         return $this->ci->db->where('idfacebook_user', $identity)
 	                           ->count_all_results('facebook_user') > 0;
 	}
-	
-	
+
+
 	// =========== Ion_auth hooks =============================================
-	
-	
+
+
 	/**
 	 * Destroy the facebook acces token session
 	 */
@@ -301,7 +302,7 @@ class Facebook
 	    $ci =& get_instance();
 	    $ci->session->unset_userdata('fb_access_token');
 	}
-	
+
 	/**
 	 * Add database facebook datas to Ion-Auth
 	 */
@@ -311,5 +312,5 @@ class Facebook
 	    $ci->ion_auth_model->db->select('facebook_user.idfacebook_user');
 	    $ci->ion_auth_model->db->join('facebook_user', 'facebook_user.users_id = users.id', 'left');
 	}
-	
+
 }
