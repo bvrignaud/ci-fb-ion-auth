@@ -45,7 +45,7 @@ In the package you will find simple example usage code in the controllers and vi
 view:
 
 ```php
-<a href="<?=getFacebookLoginUrl('welcome/fb_register_callback')?>"Register with Facebook</a>
+<a href="<?=getFacebookLoginUrl('welcome/fb_register_callback')?>">Register with Facebook</a>
 ```
 controller (welcome.php):
 
